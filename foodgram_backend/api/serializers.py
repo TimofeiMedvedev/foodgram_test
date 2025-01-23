@@ -36,8 +36,19 @@ class CustomUserSerializer(UserSerializer):
             return obj.following.exists()
         return False
     
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if request and 'avatar' not in attrs or attrs.get('avatar') is None:
+            raise serializers.ValidationError("Отсутствует поле 'avatar'")
+        return super().validate(attrs)
+    
     def update(self, instance, validated_data):
-        instance.avatar = validated_data.get('avatar', instance.avatar)
+        avatar = validated_data.get('avatar', None)
+        if avatar:
+            if instance.avatar:
+                instance.avatar.delete()
+            instance.avatar = avatar
+        return super().update(instance, validated_data)
     
 class CustomCreateUserSerializer(UserCreateSerializer):
     class Meta:
@@ -53,13 +64,12 @@ class CustomCreateUserSerializer(UserCreateSerializer):
             username=validated_data['username'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            password=validated_data['password'],
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
 
-class ChangePasswordSerializer(SetPasswordSerializer):
+class CustomChangePasswordSerializer(SetPasswordSerializer):
 
     current_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
