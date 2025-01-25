@@ -34,13 +34,11 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(
         max_length=MAX_LENGTH_NAME,
         verbose_name='Единица измерения ингредиента')
-    amount = models.IntegerField(
-        validators=[MinValueValidator(1)],
-        verbose_name="Количество"
-    )
+ 
 
     class Meta:
-        unique_together = ('name', 'measurement_unit',)
+        verbose_name = 'Инградиент'
+        verbose_name_plural = "Инградиенты"
 
     def __str__(self):
         return self.name
@@ -89,6 +87,10 @@ class RecipeIngredient(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ингредиент'
+    )
+    amount = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        verbose_name="Количество"
     )
  
     class Meta:
