@@ -3,9 +3,10 @@ from rest_framework import filters, viewsets,  status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from recipes.models import Tag, Recipe, Ingredient
 
 
-from .serializers import (CustomCreateUserSerializer, CustomUserSerializer,)
+from .serializers import (CustomCreateUserSerializer, CustomUserSerializer, TagSerializer, RecipeReadSerializer, Ingredientserializer, RecipeCreateSerializer)
 
 
 User = get_user_model()
@@ -41,3 +42,32 @@ def avatar(request):
     serializer.save()
     return Response({'avatar': user.avatar.url},
                     status=status.HTTP_200_OK)
+    
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [AllowAny]
+    pagination_class = None
+
+class IngredientViewSet(viewsets.ModelViewSet):
+    """Вьюсет для IngredientSerializer."""
+    queryset = Ingredient.objects.all()
+    serializer_class = Ingredientserializer
+    permission_classes = (AllowAny, )
+    pagination_class = None
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    """Вьюсет для RecipeSerializer."""
+    queryset = Recipe.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = RecipeReadSerializer
+
+    def perform_create(self, serializer):
+        return serializer.save(author=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrive']:
+            return RecipeReadSerializer
+        return RecipeCreateSerializer
+
