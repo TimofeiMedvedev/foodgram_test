@@ -85,25 +85,26 @@ class Ingredientserializer(serializers.ModelSerializer):
     """Сеарилизатор для ингредиентов."""
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement_unit',)
+        fields = ('name', 'measurement_unit', 'amount')
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сеарилизатор для ингредиентов в рецептах."""
 
-    id = serializers.ReadOnlyField(
-        source='ingredient.id'
-    )
-    name = serializers.ReadOnlyField(
-        source='ingredient.name'
-    )
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
-    )
+    # id = serializers.ReadOnlyField(
+    #     source='ingredient.id'
+    # )
+    # name = serializers.ReadOnlyField(
+    #     source='ingredient.name'
+    # )
+    # measurement_unit = serializers.ReadOnlyField( 
+    #     source='ingredient.measurement_unit'
+    # )
+    def is_named_bar(self, instance):
+      return instance.name == "amount"
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'name',
-                  'measurement_unit',)
+        fields = '__all__'
 
         
 
@@ -116,6 +117,10 @@ class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'amount')
 
+    # def to_representation(self, value):
+
+    #     return Ingredientserializer(value).data
+
     def validate_amount(self, amount):
         if amount < MIN_INGREDIENTS:
             raise serializers.ValidationError(
@@ -127,7 +132,7 @@ class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
 class RecipeReadSerializer(serializers.ModelSerializer):
     """Сеарилизатор для показа рецепта."""
     tags = TagSerializer(many=True)
-    ingredients = RecipeIngredientSerializer(
+    ingredients = Ingredientserializer(
         many=True,
     )
     author = CustomUserSerializer()
@@ -192,16 +197,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 )
             ing_list.append(ingredient['id'])
         return data
-        
+
     def tags_and_ingredient_obj(self, recipe, ingredients, tags,):
         recipe.tags.set(tags)
         for ingredient in ingredients:
-            amount = ingredient.get('amount')
+            # amount = ingredient['amount']
             current_ingredient = Ingredient.objects.get(id=ingredient['id'])
             RecipeIngredient.objects.create(
                 recipe=recipe,
                 ingredient=current_ingredient,
-                amount=amount
             )
     def create(self, validated_data):
         tags = validated_data.pop('tags')
