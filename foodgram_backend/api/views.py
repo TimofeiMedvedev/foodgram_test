@@ -27,41 +27,37 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     filter_backends = (filters.SearchFilter,)
    
-    # def get_serializer_class(self):
-    #     if self.request.method == 'POST':
-    #        return CustomCreateUserSerializer
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+           return CustomCreateUserSerializer
         
-    @action(
-        detail=True,
-        methods=['POST', 'DELETE'],
-        url_path='subscribe',
-        permission_classes=(IsAuthenticated,)
-    )
-    def follow(self, request, id):
-        following = get_object_or_404(User, id=id)
-        if request.method == 'POST':
-            if Follow.objects.filter(user=request.user,
-                                     following=following).exists():
-                return Response({'errors': 'Подписка уже оформлена!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            if request.user == following:
-                return Response({'errors': 'Нельзя подписаться на себя!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            serializer = FollowSerializer(
-                following,
-                data=request.data,
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=request.user,
-                                  following=following)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            get_object_or_404(
-                Follow, user=request.user, following=following
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+@api_view(('POST', 'DELETE'))
+@permission_classes((IsAuthenticated,))
+def follow(request, id):
+    following = get_object_or_404(User, id=id)
+    if request.method == 'POST':
+        if Follow.objects.filter(user=request.user,
+                                following=following).exists():
+            return Response({'errors': 'Подписка уже оформлена!'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if request.user == following:
+            return Response({'errors': 'Нельзя подписаться на себя!'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = FollowSerializer(
+            following,
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        Follow.objects.create(user=request.user,
+                             following=following)
+        return Response(serializer.data,
+                        tatus=status.HTTP_201_CREATED)
+    if request.method == 'DELETE':
+        get_object_or_404(
+            Follow, user=request.user, following=following
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
         
 
    
