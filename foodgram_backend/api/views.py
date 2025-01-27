@@ -9,6 +9,7 @@ from .permissions import IsAuthorOrReadOnly
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
 from django.http.response import HttpResponse
+from djoser.views import UserViewSet
 
 
 from .serializers import (CustomCreateUserSerializer, CustomUserSerializer, 
@@ -19,18 +20,20 @@ from .serializers import (CustomCreateUserSerializer, CustomUserSerializer,
 User = get_user_model()
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class CustomUserViewSet(UserViewSet):
     """ViewSet модели User."""
 
     queryset = User.objects.all()
-    permission_classes = None
+    # permission_classes = None
     serializer_class = CustomUserSerializer
     filter_backends = (filters.SearchFilter,)
    
     def get_serializer_class(self):
-        if self.request.method == 'POST':
-           return CustomCreateUserSerializer
+        if self.request.method == 'GET':
+            return CustomUserSerializer
+        return CustomCreateUserSerializer
         
+
 @api_view(('POST', 'DELETE'))
 @permission_classes((IsAuthenticated,))
 def follow(request, id):
