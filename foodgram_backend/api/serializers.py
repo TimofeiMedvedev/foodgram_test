@@ -91,15 +91,26 @@ class FollowSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(UserSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'username', 'first_name',
-                  'last_name', 'is_subscribed',
-                  'recipes', 'recipes_count')
-        read_only_fields = ('id', 'email', 'username',
-                            'is_subscribed',
-                            'first_name', 'last_name',
-                            'recipes', 'recipes_count')
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_subscribed",
+            "avatar",
+            "recipes_count",
+            "recipes",
+        )
+        read_only_fields = (
+            'username',
+            'first_name', 
+            'last_name',
+            'email'
+        )
+        
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if (request and request.user.is_authenticated):
@@ -107,16 +118,15 @@ class FollowSerializer(serializers.ModelSerializer):
         return False
 
     def get_recipes(self, obj):
-        request = self.context.get('request')
-        recipes_limit = request.GET.get('recipes_limit')
-        queryset = obj.author_recipe.all()
-        if recipes_limit:
-            queryset = queryset[:int(recipes_limit)]
+        queryset = obj.recipes.all()
+        limit = self.context.get('recipes_limit')
+        if limit:
+            queryset = queryset[: int(limit)]
         return RecipeMiniSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
-        return obj.author_recipe.count()
-
+        return obj.recipes.count()
+    
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag

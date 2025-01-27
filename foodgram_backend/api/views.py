@@ -32,36 +32,49 @@ class CustomUserViewSet(UserViewSet):
         if self.request.method == 'GET':
             return CustomUserSerializer
         return CustomCreateUserSerializer
-        
 
-@api_view(('POST', 'DELETE'))
-@permission_classes((IsAuthenticated,))
-def follow(request, id):
-    following = get_object_or_404(User, id=id)
-    if request.method == 'POST':
-        if Follow.objects.filter(user=request.user,
-                                following=following).exists():
-            return Response({'errors': 'Подписка уже оформлена!'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if request.user == following:
-            return Response({'errors': 'Нельзя подписаться на себя!'},
-                            status=status.HTTP_400_BAD_REQUEST)
+    @action(
+        detail=True,
+        methods=['POST', 'DELETE'],
+        permission_classes=(IsAuthenticated,)
+    )
+    def subscribe(self, request, id):
+        following = get_object_or_404(User, id=id)
+        if request.method == 'POST':
+            if Follow.objects.filter(user=request.user,
+                                     following=following).exists():
+                return Response({'errors': 'Подписка на этого пользователя уже есть'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if request.user == following:
+                return Response({'errors': 'Нельзя подписаться на самого себя!'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            serializer = FollowSerializer(
+                following,
+                data=request.data,
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Follow.objects.create(user=request.user,
+                                  following=following)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            get_object_or_404(
+                Follow, user=request.user, following=following
+            ).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['GET'],
+            url_path='subscriptions',
+            permission_classes=(AllowAny,))
+    def follows(self, request):
+        queryset = User.objects.filter(following__user=request.user)
+        pages = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
-            following,
-            data=request.data,
-            context={'request': request}
+            pages, many=True, context={'request': request}
         )
-        serializer.is_valid(raise_exception=True)
-        Follow.objects.create(user=request.user,
-                             following=following)
-        return Response(serializer.data,
-                        tatus=status.HTTP_201_CREATED)
-    if request.method == 'DELETE':
-        get_object_or_404(
-            Follow, user=request.user, following=following
-        ).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        
+        return self.get_paginated_response(serializer.data)
+       
 
    
 @api_view(('PUT', 'DELETE'))
