@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from foodgram_backend.constants import MAX_LENGTH_NAME, MAX_LENGTH_SLUG, MAX_LENGTH_ING
+from foodgram_backend.constants import MAX_LENGTH_NAME, MAX_LENGTH_SLUG, MAX_LENGTH_ING, MAX_LENGTH_RECIPE_NAME
 from django.core.validators import MinValueValidator
+import shortuuid
 
 User = get_user_model()
 
@@ -37,8 +38,8 @@ class Ingredient(models.Model):
  
 
     class Meta:
-        verbose_name = 'Инградиент'
-        verbose_name_plural = "Инградиенты"
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = "Ингредиенты"
 
     def __str__(self):
         return self.name
@@ -63,7 +64,7 @@ class Recipe(models.Model):
         through='RecipeIngredient',
     )
     name = models.CharField(
-        max_length=MAX_LENGTH_NAME,
+        max_length=MAX_LENGTH_RECIPE_NAME,
         verbose_name='Название рецепта',
     )
     image = models.ImageField(
@@ -77,6 +78,26 @@ class Recipe(models.Model):
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в минутах',
     )
+    short_link = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        unique=True,
+        verbose_name="Короткая ссылка",
+    )
+    def get_or_create_short_link(self):
+        if not self.short_link:
+            self.short_link = shortuuid.uuid()[:7]
+            self.save(update_fields=["short_link"])
+        return self.short_link
+    
+    class Meta:
+        verbose_name = "рецепт"
+        verbose_name_plural = "Рецепты"
+
+    def __str__(self):
+        return self.name
+    
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
@@ -94,10 +115,8 @@ class RecipeIngredient(models.Model):
     )
  
     class Meta:
-        constraints = [
-            models.UniqueConstraint(name='unique_recipe_ingredient',
-                                    fields=["recipe", "ingredient"])
-        ]
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецептах'
 
     def __str__(self):
         return (
@@ -105,3 +124,43 @@ class RecipeIngredient(models.Model):
             f'{self.amount} - '
             f'{self.ingredient.measurement_unit} - '
         )
+
+
+class ShoppingCart(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        related_name='buyer',
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        related_name='recipe_cart',
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+    )
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
+
+class Favorite(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        related_name='favorite_user',
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        related_name='favorite_recipe',
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+    )
+
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
