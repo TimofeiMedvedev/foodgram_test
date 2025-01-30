@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-j&4ipw3o&@7tz0uh!r3+e7o5x7h5s_3=#a_hhrl4yyorpv6808
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1',]
 
 
 
@@ -116,25 +116,26 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'SEARCH_PARAM': 'name'
 }
-
+   
 
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
     'SERIALIZERS': {
-        # "user_create": "api.serializers.CustomCreateUserSerializer",
-        # "user": "api.serializers.CustomUserSerializer",
-        "current_user": "api.serializers.CustomUserSerializer",
-    }
-    #     'set_password': 'api.serializers.ChangePasswordSerializer',
-    # },
+        # 'user_create': 'api.serializers.CustomCreateUserSerializer',
+        # 'user': 'api.serializers.CustomUserSerializer',
+        # 'current_user': 'api.serializers.CustomUserSerializer',   
+        'set_password': 'api.serializers.CustomChangePasswordSerializer',
+    },
 
-    # 'PERMISSIONS': {
-    #     'user_list': ('rest_framework.permissions.AllowAny',),
-    #     'user': ('rest_framework.permissions.AllowAny',),
-    # },
+    'PERMISSIONS': {
+        'user_list': ('rest_framework.permissions.AllowAny',),
+        # 'user': ('rest_framework.permissions.AllowAny',),
+        # 'set_password': ['rest_framework.permissions.IsAuthenticated']
+    },
 }
 
 ACCOUNT_AUTHENTICATION_METHOD = 'email'

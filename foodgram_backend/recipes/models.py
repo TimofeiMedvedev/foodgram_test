@@ -142,8 +142,8 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Корзина'
-        verbose_name_plural = 'Корзины'
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
 
 
 class Favorite(models.Model):

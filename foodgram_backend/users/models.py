@@ -8,6 +8,7 @@ from .validators import username_validator
 
 
 class User(AbstractUser):
+
     username = models.CharField(
         ('username'),
         max_length=MAX_LENGTH_USERNAME,
