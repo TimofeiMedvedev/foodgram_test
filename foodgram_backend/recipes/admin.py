@@ -5,13 +5,13 @@ from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient, ShoppingCa
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
+    list_display = ('id', 'name', 'slug')
     search_fields = ('name',)
     list_filter = ('name',)
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
   
 
