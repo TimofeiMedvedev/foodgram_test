@@ -1,8 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.db import models
-from foodgram_backend.constants import MAX_LENGTH_NAME, MAX_LENGTH_SLUG, MAX_LENGTH_ING, MAX_LENGTH_RECIPE_NAME
-from django.core.validators import MinValueValidator
 import shortuuid
+from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
+from django.db import models
+
+from foodgram_backend.constants import (MAX_LENGTH_ING, MAX_LENGTH_NAME,
+                                        MAX_LENGTH_RECIPE_NAME,
+                                        MAX_LENGTH_SLUG)
 
 User = get_user_model()
 

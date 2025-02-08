@@ -2,7 +2,6 @@ import re
 
 from django.core.exceptions import ValidationError
 
-
 PATTERN = r'^[\w.@+-]+\Z'
 
 
