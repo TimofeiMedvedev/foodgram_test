@@ -1,4 +1,5 @@
 from rest_framework.pagination import PageNumberPagination
+
 from foodgram_backend.constants import PAGE_SIZE
 
 

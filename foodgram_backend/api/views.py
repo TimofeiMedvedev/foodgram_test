@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
@@ -11,20 +13,17 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Follow
-from django.urls import reverse
-from django.http import HttpResponseRedirect
 
+from .addition import counting_shop_list
 from .filters import RecipeFilter
 from .pagination import UserPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (CustomChangePasswordSerializer,
                           CustomCreateUserSerializer, CustomUserSerializer,
-                          FollowSerializer, Ingredientserializer,
-                          RecipeCreateSerializer, RecipeMiniSerializer,
-                          RecipeReadSerializer, TagSerializer,
-                          ShoppingCartSerializer, FavoriteSerializer)
-from .countfile import counting_shop_list
-from django.core.exceptions import ValidationError
+                          FavoriteSerializer, FollowSerializer,
+                          Ingredientserializer, RecipeCreateSerializer,
+                          RecipeMiniSerializer, RecipeReadSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -42,24 +41,23 @@ class CustomUserViewSet(UserViewSet):
     pagination_class = UserPagination
 
     def get_permissions(self):
-        if self.action in ["create", "list", "retrieve"]:
+        if self.action in ['create', 'list', 'retrieve']:
             return [AllowAny()]
         return [IsAuthenticated()]
 
     def get_serializer_class(self):
-        if self.action == "create":
+        if self.action == 'create':
             return CustomCreateUserSerializer
-        if self.action == "set_password":
+        if self.action == 'set_password':
             return CustomChangePasswordSerializer
         return CustomUserSerializer
-    
+
     def get_serializer_context(self):
         """Метод для передачи контекста. """
 
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
-
 
     @action(
         detail=True,
@@ -98,12 +96,18 @@ class CustomUserViewSet(UserViewSet):
                 recipes_limit = request.query_params.get('recipes_limit')
                 serializer = FollowSerializer(
                     following,
-                    context={
-                        'request': request,
-                        "recipes_limit": recipes_limit
-                    }
+                    data={'recipes_limit': recipes_limit},
+                    context={'request': request}
                 )
-            serializer.save()
+                # serializer = FollowSerializer(
+                #     following,
+                #     context={
+                #         'request': request,
+                #         "recipes_limit": recipes_limit
+                #     }
+                # )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
@@ -195,13 +199,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrive',]:
+      
             return RecipeReadSerializer
         return RecipeCreateSerializer
 
     def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", 'destroy',
-                           "favorite", "download_shopping_cart",
-                           "shopping_cart",]:
+        if self.action in ['create', 'update', 'partial_update', 'destroy',
+                           'favorite', 'download_shopping_cart',
+                           'shopping_cart',]:
             return [IsAuthenticated(), IsAuthorOrReadOnly()]
         return [AllowAny()]
 
@@ -211,7 +216,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk=None):
         url = reverse('api:recipes-detail', args={pk})
-        return Response({'direct-link': url},
+        return Response({'short-link': url},
                         status=status.HTTP_200_OK)
 
     @action(
@@ -313,7 +318,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
-        return self.favorite_shop(request, Favorite, FavoriteSerializer, pk=pk)
+        return self.shopping_favorite(request, Favorite,
+                                      FavoriteSerializer, pk=pk)
 
     def shopping_favorite(self, request, model, serializer_create, pk=None):
         serializer = serializer_create(
@@ -321,9 +327,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
-        shopping_cart = serializer.save(user=request.user)
-        shopping_cart_data = RecipeMiniSerializer(
-            shopping_cart.recipe,
+        shop_favorite = serializer.save(user=request.user)
+        shop_favorite_data = RecipeMiniSerializer(
+            shop_favorite.recipe,
             context={'request': request}).data
 
         if request.method == 'DELETE':
@@ -336,7 +342,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 raise ValidationError('Проблема с удалением.')
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            data=shopping_cart_data,
+            data=shop_favorite_data,
             status=status.HTTP_201_CREATED
         )
 
