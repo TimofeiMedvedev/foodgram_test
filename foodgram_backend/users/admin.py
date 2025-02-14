@@ -18,7 +18,7 @@ class User(UserAdmin):
 
     def follow_amount(self, obj):
         return obj.following.count()
-    
+
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):

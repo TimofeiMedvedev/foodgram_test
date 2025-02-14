@@ -10,8 +10,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1',]
 
-
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -118,23 +116,17 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'SEARCH_PARAM': 'name'
 }
-   
 
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
     'SERIALIZERS': {
-        # 'user_create': 'api.serializers.CustomCreateUserSerializer',
-        # 'user': 'api.serializers.CustomUserSerializer',
-        # 'current_user': 'api.serializers.CustomUserSerializer',   
         'set_password': 'api.serializers.CustomChangePasswordSerializer',
     },
 
     'PERMISSIONS': {
         'user_list': ('rest_framework.permissions.AllowAny',),
-        # 'user': ('rest_framework.permissions.AllowAny',),
-        # 'set_password': ['rest_framework.permissions.IsAuthenticated']
     },
 }
 
@@ -145,4 +137,4 @@ ACCOUNT_USERNAME_REQUIRED = False
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-rc_paths = '/foodgram_backend_test'
+src_paths = '/foodgram_backend_test'

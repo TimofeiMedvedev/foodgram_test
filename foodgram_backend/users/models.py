@@ -23,7 +23,7 @@ class User(AbstractUser):
         validators=(username_validator,),
     )
     email = models.EmailField(
-        ('email address'), 
+        ('email address'),
         max_length=MAX_LENGTH_EMAIL,
         unique=True
     )

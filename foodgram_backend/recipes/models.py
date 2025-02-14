@@ -13,7 +13,7 @@ User = get_user_model()
 
 class Tag(models.Model):
     name = models.CharField(
-        max_length=MAX_LENGTH_NAME, 
+        max_length=MAX_LENGTH_NAME,
         unique=True,
         verbose_name='Название тэга',
     )
@@ -183,12 +183,12 @@ class ShoppingCart(models.Model):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
         ordering = ('recipe',)
-        constraints = [
-            models.UniqueConstraint(
-                name='unique_shop_user',
-                fields=['user', 'recipe']
-            )
-        ]
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         name='unique_shop_user',
+        #         fields=['user', 'recipe']
+        #     )
+        # ]
 
 
 class Favorite(models.Model):

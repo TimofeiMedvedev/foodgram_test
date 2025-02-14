@@ -10,12 +10,13 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('name',)
 
+
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'measurement_unit')
     list_filter = ('measurement_unit',)
     search_fields = ('name', 'measurement_unit',)
-  
+
 
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
@@ -31,7 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'author',
-        'tags',
+        'get_tags',
         'favorite_count',
         'cooking_time',
     )
@@ -47,16 +48,21 @@ class RecipeAdmin(admin.ModelAdmin):
         'tags',
         'author',
     ]
-    inlines = [RecipeIngredientInline]
-
-    def tags(self, obj):
-        tag = obj
-        return ','.join([x.name for x in tag.recipes.all()])
-    
+    inlines = [
+        RecipeIngredientInline,
+        RecipeTagInLine,
+    ]
+    # inlines = [RecipeTagInLine]
+    @admin.display(description='Теги в рецептах')
+    def get_tags(self, obj):
+ 
+        # return ','.join([x.name for x in tag.recipes.all()])
+        return ','.join([tag.name for tag in obj.tags.all()])
     @admin.display(description='Добавлений в избранное')
     def favorite_count(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
     favorite_count.short_description = 'Кол-во добавлений в избранное'
+
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):

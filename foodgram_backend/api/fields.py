@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.core.files.base import ContentFile
 import base64
 
+
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
