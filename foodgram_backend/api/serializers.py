@@ -1,16 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.shortcuts import get_object_or_404
 from djoser.serializers import (SetPasswordSerializer, UserCreateSerializer,
                                 UserSerializer)
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag,)
-from users.models import Follow
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
 
 from foodgram_backend.constants import MAX_INGREDIENTS, MIN_INGREDIENTS
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
+from users.models import Follow
+
 from .fields import Base64ImageField
-from django.shortcuts import get_object_or_404
 
 User = get_user_model()
 
@@ -323,28 +324,50 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             tags.add(tag)
         return value
 
-    def validate_ingredients(self, ingredients):
-        if not ingredients:
-            raise serializers.ValidationError(
-                'Поле ингредиентов не может быть пустым')
-        return ingredients
-    def tags_and_ingredient_obj(self, recipe, ingredients, tags,):
+    # def validate_ingredients(self, ingredients):
+    #     ingredients_set = set(ingredients)
+    #     if not ingredients:
+    #         raise serializers.ValidationError(
+    #             'Поле ингредиентов не может быть пустым')
+    #     if 
+    #     return ingredients
+    def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError('Нужно добавить ингредиенты.')
+        ingredients_data = set()
+        for ingredient_item in value:
+            ingredient_id = ingredient_item['ingredient']
+            if ingredient_id in ingredients_data:
+                raise serializers.ValidationError(
+                    'Ингредиенты не должны повторяться.'
+                )
+            ingredients_data.add(ingredient_id)
+        return value
 
+    def tags_and_ingredient_obj(self, recipe, ingredients, tags):
         recipe.tags.set(tags)
-        for ingredient_item in ingredients:
-            RecipeIngredient.objects.bulk_create(
-                [RecipeIngredient(
-                    ingredient=ingredient_item['ingredient'],
-                    recipe=recipe,
-                    amount=ingredient_item['amount']
-                )]
+        recipe_ingredients = [
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient_data['ingredient'],
+                amount=ingredient_data['amount']
             )
+            for ingredient_data in ingredients
+        ]
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        # for ing_item in ingredients:
+        #     RecipeIngredient.objects.create(
+        #         ingredient=ing_item['ingredient'],
+        #         recipe=recipe,
+        #         amount=ing_item['amount']
+        #     )
+
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
-        self.tags_and_ingredient_obj(recipe, ingredients, tags,)
+        self.tags_and_ingredient_obj(recipe, ingredients, tags)
         return recipe
 
     def update(self, instance, validated_data):
@@ -357,7 +380,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.tags.set(tags)
         ingredients = validated_data.pop('ingredients',)
 
-        self.tags_and_ingredient_obj(instance, ingredients, tags,)
+        self.tags_and_ingredient_obj(instance, ingredients, tags)
 
         return super().update(instance, validated_data)
 

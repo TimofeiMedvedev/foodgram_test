@@ -1,13 +1,13 @@
 import shortuuid
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from foodgram_backend.constants import (MAX_LENGTH_ING, MAX_LENGTH_NAME,
+from foodgram_backend.constants import (MAX_AMOUNT, MAX_COOKING_TIME,
+                                        MAX_LENGTH_ING, MAX_LENGTH_NAME,
                                         MAX_LENGTH_RECIPE_NAME,
-                                        MAX_LENGTH_SLUG, MIN_COOKING_TIME,
-                                        MAX_COOKING_TIME, MIN_AMOUNT,
-                                        MAX_AMOUNT)
+                                        MAX_LENGTH_SLUG, MIN_AMOUNT,
+                                        MIN_COOKING_TIME)
 
 User = get_user_model()
 
@@ -60,7 +60,7 @@ class Recipe(models.Model):
         Tag,
         related_name='recipes',
         verbose_name='Тэги',
-        through='RecipeTag'
+        # through='RecipeTag'
     )
     author = models.ForeignKey(
         User,
@@ -145,23 +145,23 @@ class RecipeIngredient(models.Model):
             f'{self.ingredient.measurement_unit} - '
         )
     
-class RecipeTag(models.Model):
+# class RecipeTag(models.Model):
 
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт'
-    )
+#     recipe = models.ForeignKey(
+#         Recipe,
+#         on_delete=models.CASCADE,
+#         verbose_name='Рецепт'
+#     )
 
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        verbose_name='Тэг'
-    )
+#     tag = models.ForeignKey(
+#         Tag,
+#         on_delete=models.CASCADE,
+#         verbose_name='Тэг'
+#     )
 
-    class Meta:
-        verbose_name = 'Тэг в рецепте'
-        verbose_name_plural = 'Тэги в рецептах'
+#     class Meta:
+#         verbose_name = 'Тэг в рецепте'
+#         verbose_name_plural = 'Тэги в рецептах'
 
 
 class ShoppingCart(models.Model):

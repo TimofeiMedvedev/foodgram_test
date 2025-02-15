@@ -6,12 +6,13 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag)
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 from users.models import Follow
 
 from .addition import counting_shop_list
@@ -20,12 +21,11 @@ from .pagination import UserPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (CustomChangePasswordSerializer,
                           CustomCreateUserSerializer, CustomUserSerializer,
-                          FavoriteSerializer, FollowSerializer,
-                          Ingredientserializer, RecipeCreateSerializer,
-                          RecipeMiniSerializer, RecipeReadSerializer,
-                          ShoppingCartSerializer, TagSerializer, 
-                          FollowCreateSerializer)
-from rest_framework.permissions import AllowAny
+                          FavoriteSerializer, FollowCreateSerializer,
+                          FollowSerializer, Ingredientserializer,
+                          RecipeCreateSerializer, RecipeMiniSerializer,
+                          RecipeReadSerializer, ShoppingCartSerializer,
+                          TagSerializer)
 
 User = get_user_model()
 
@@ -54,6 +54,10 @@ class CustomUserViewSet(UserViewSet):
             return CustomChangePasswordSerializer
         return CustomUserSerializer
 
+    # def get_serializer_context(self): 
+    #     context = super().get_serializer_context() 
+    #     context.update({'request': self.request}) 
+    #     return context 
 
     @action(
         detail=True,
@@ -91,63 +95,6 @@ class CustomUserViewSet(UserViewSet):
             raise ValidationError('Проблема с удалением.')
         return Response(status=status.HTTP_204_NO_CONTENT)
            
-
-
-
-
-    # def subscribe(self, request, pk=None):
-    #     following = get_object_or_404(User, id=pk)
-    #     following_availability = Follow.objects.filter(
-    #         user=request.user,
-    #         following=following
-    #     ).exists()
-    #     if request.method == 'POST':
-    #         if following_availability:
-    #             return Response(
-    #                 {'errors': 'Подписка на этого пользователя уже есть'},
-    #                 status=status.HTTP_400_BAD_REQUEST
-    #             )
-
-    #         if request.user == following:
-    #             return Response(
-    #                 {'errors': 'Нельзя подписаться на самого себя!'},
-    #                 status=status.HTTP_400_BAD_REQUEST
-    #             )
-            
-    #         # serializer = FollowSerializer(
-    #         #     following,
-    #         #     data=request.data,
-    #         #     context={'request': request}
-    #         # )
-    #         # serializer.is_valid(raise_exception=True)
-    #         if Follow.objects.create(
-    #             user=request.user,
-    #             following=following
-    #         ):
-    #             recipes_limit = request.query_params.get('recipes_limit')
-    #             # following_user = self.get_user(pk)
-    #             serializer = FollowCreateSerializer(
-    #                 following,
-    #                 data={
-    #                         'recipes_limit': recipes_limit,
-    #                         'following': pk
-    #                     },
-    #                 context={'request': request}
-    #             )
-    #         serializer.is_valid(raise_exception=True)
-    #         serializer.save(user=request.user)
-    #         return Response(serializer.data,
-    #                         status=status.HTTP_201_CREATED)
-    #     if request.method == 'DELETE':
-    #         if not following_availability:
-    #             return Response(
-    #                 {'errors': 'Такого пользователя не существует'},
-    #                 status=status.HTTP_400_BAD_REQUEST
-    #             )
-    #         get_object_or_404(
-    #             Follow, user=request.user, following=following
-    #         ).delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['GET'],
             permission_classes=(AllowAny,))
@@ -280,21 +227,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ],
     )
     def download_cart(self, request):
-        response = HttpResponse(content_type='text/plain')
+        user = request.user
+        response = HttpResponse(content_type="text/plain")
         ingredients = RecipeIngredient.objects.filter(
-            recipe__recipe_cart__user=request.user).values(
-            'ingredient__name', 'ingredient__measurement_unit').annotate(
-            amount=Sum('amount'))
-
+            recipe__recipe_cart__user=user
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit').annotate(amount=Sum('amount'))
         response = HttpResponse(
-            counting_shop_list(ingredients),
-            content_type='text/plain'
-        )
+            counting_shop_list(ingredients), 
+            content_type='text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.txt"'
         )
-        return response
-
+        return response 
+    
     @action(
         detail=True,
         methods=['POST', 'DELETE'],

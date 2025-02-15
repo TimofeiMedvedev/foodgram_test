@@ -137,4 +137,4 @@ ACCOUNT_USERNAME_REQUIRED = False
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-src_paths = '/foodgram_backend_test'
+src_paths = '/foodgram_backend_test/foodgram_backend'
